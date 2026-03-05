@@ -9,7 +9,7 @@ import jakarta.persistence.*;
 
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private Long msv;
 
     @Column(unique = true, nullable = false)

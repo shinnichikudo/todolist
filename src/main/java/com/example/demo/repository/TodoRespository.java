@@ -5,5 +5,5 @@ import java.util.List;
 
 
 public interface TodoRespository extends JpaRepository<Todo, Long> {
-List <Todo> findByUserId(Long msv);
+    List<Todo> findByUserMsv(Long msv);
 }
