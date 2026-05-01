@@ -5,7 +5,6 @@ import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.crypto.password4j.BcryptPassword4jPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,10 +27,10 @@ public class UserService {
             user.setPassword(passwordEncoded);
             return userRepository.save(user);
         }
-        public User LoginUser(String msv, String password) {
+        public User LoginUser(String email, String password) {
 
-           Long msvLong = Long.parseLong(msv);
-           User user = userRepository.findByMsv(msvLong);
+
+           User user = userRepository.findByEmail(email);
            if (user == null) {
                throw new RuntimeException("Tai khoan khong ton tai");
            }
