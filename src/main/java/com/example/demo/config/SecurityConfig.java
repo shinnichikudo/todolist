@@ -24,22 +24,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // Chỉ cần 1 dòng disable csrf này là đủ
                 .csrf(AbstractHttpConfigurer::disable)
-
+                .cors(cors -> cors.disable())
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-
                 .authorizeHttpRequests(auth -> auth
-
-                        // Giả sử Controller của bạn có mapping là /api/auth/login
+                        .requestMatchers("/api/calendar/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-
-
+                        // THÊM DÒNG NÀY ĐỂ XEM ĐƯỢC LỖI THẬT:
+                        .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )
 
-                // 4. Lắp cái Filter của bạn vào trước cái Filter mặc định của Spring Security
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

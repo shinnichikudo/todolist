@@ -1,0 +1,14 @@
+package com.example.demo.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.example.demo.entry.Subject;
+import java.util.List;
+
+@Repository
+public interface SubjectRepository extends JpaRepository<Subject, Long> {
+    List<Subject> findByUserMsv(Long msv);
+}
+
+
