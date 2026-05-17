@@ -14,12 +14,12 @@ export default function Login() {
         setErrorMsg('');
 
        try {
-           const respond =await authAPI.login({ username:email, password : password });
+           const respond =await authAPI.login({ email:email, password : password });
 
        localStorage.setItem('token', respond.token);
          navigate('/dashboard');
          } catch (error) {
-              setErrorMsg('Invalid email or password');
+              setErrorMsg(error.response?.data?.message || error.message || "Lỗi kết nối!");
          }
 
     }

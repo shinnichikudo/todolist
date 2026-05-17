@@ -1,10 +1,13 @@
 package com.example.demo.config;
 
+import com.example.demo.repository.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer; // Import cái này
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,9 +17,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration; // Import cái này
-import org.springframework.web.cors.CorsConfigurationSource; // Import cái này
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource; // Import cái này
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,13 +29,15 @@ import java.util.List;
 public class SecurityConfig {
 
     @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+    @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                // 1. THAY ĐỔI: Bật CORS lên bằng cấu hình mặc định
+
                 .cors(Customizer.withDefaults())
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -48,7 +53,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 2. THÊM MỚI: Cấu hình chi tiết bộ lọc CORS (Cho phép ai vào, được dùng phương thức gì)
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -63,6 +68,18 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+
+
+        authProvider.setUserDetailsService(customUserDetailsService);
+
+
+        authProvider.setPasswordEncoder(passwordEncoder());
+
+        return authProvider;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -73,4 +90,6 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
+
+
 }

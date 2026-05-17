@@ -3,7 +3,6 @@ package com.example.demo.service;
 import com.example.demo.entry.User;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,8 +12,9 @@ import org.springframework.stereotype.Service;
 public class UserService {
     @Autowired
     private UserRepository userRepository;
-    // bam mat khau
-    private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    // lay cai mat khau duoc tiem
+    @Autowired
+    private PasswordEncoder passwordEncoder ;
     public User RegisterUser(User user) {
         if(user.getEmail() == null || user.getPassword() == null) {
             throw new RuntimeException("Email va mat khau khong duoc de trong");

@@ -1,21 +1,36 @@
 import { Calendar, Mail, Lock, User } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import authAPI from '../../api/authApi';
+
 
 export default function Register() {
+const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
   const [msv, setMsv] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
+if (password !== confirmPassword) {
+      setErrorMsg('Mật khẩu nhập lại không khớp!');
+      return;
+    }
+    try {
+        await authAPI.register({ msv, email, password, confirmPassword });
     if (password !== confirmPassword) {
       alert('Passwords do not match');
       return;
     }
     navigate('/');
+    }
+catch (error : any) {
+    console.error('Registration error:', error);
+    setErrorMsg('register failed: ' + (error.response?.data?.message || error.message));
+}
   };
 
   return (
@@ -33,6 +48,12 @@ export default function Register() {
         {/* Register Form */}
         <div className="bg-[#0a0e1a] border border-[#1a2332] rounded-xl p-8">
           <h2 className="text-white text-xl mb-6">Create your account</h2>
+          {/*Neu errorMsg co chu thi man hinh do*/}
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-red-900/50 border border-red-500/50 rounded-lg text-red-200 text-sm text-center">
+              {errorMsg}
+            </div>
+          )}
 
           <form onSubmit={handleRegister} className="space-y-5">
             {/* MSV Field */}
