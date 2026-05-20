@@ -1,6 +1,4 @@
 import { Calendar, BookOpen, Plus } from 'lucide-react';
-import { useState } from 'react';
-import AddSubjectModal from './AddSubjectModal';
 
 interface Subject {
   id: string;
@@ -8,13 +6,20 @@ interface Subject {
   color: string;
 }
 
+
 interface LeftSidebarProps {
   subjects: Subject[];
-  onAddSubject: (newSubject?: any) => void;
+  onAddSubject: () => void;
+  selectedSubjectId: string | null;
+  onSelectSubject: (id: string | null) => void;
 }
 
-export default function LeftSidebar({ subjects, onAddSubject }: LeftSidebarProps) {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+export default function LeftSidebar({
+  subjects,
+  onAddSubject,
+  selectedSubjectId,
+  onSelectSubject
+}: LeftSidebarProps) {
 
   return (
     <div className="w-64 bg-[#0a0e1a] border-r border-[#1a2332] h-full flex flex-col">
@@ -25,7 +30,7 @@ export default function LeftSidebar({ subjects, onAddSubject }: LeftSidebarProps
             <Calendar className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-white text-xl">TestTool</h1>
+            <h1 className="text-white text-xl font-semibold">TestTool</h1>
             <p className="text-gray-500 text-xs">Academic Calendar</p>
           </div>
         </div>
@@ -45,43 +50,58 @@ export default function LeftSidebar({ subjects, onAddSubject }: LeftSidebarProps
         </nav>
       </div>
 
-      {/* Subjects List */}
+      {/* Subjects List & Filter */}
       <div className="flex-1 p-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-gray-400 text-sm uppercase tracking-wider">Subjects</h3>
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={onAddSubject} // Sử dụng hàm mở modal truyền từ cha xuống
             className="w-6 h-6 rounded flex items-center justify-center hover:bg-[#1a2332] text-gray-400 hover:text-white transition-colors"
           >
             <Plus className="w-4 h-4" />
           </button>
         </div>
-        <div className="space-y-2">
 
-          {subjects?.map((subject) => (
-            <div
-              key={subject.id}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1a2332] cursor-pointer group transition-colors"
-            >
+        <div className="space-y-1">
+          {/* 🟢Nút TẤT CẢ LỊCH TRÌNH (Được đưa vào đúng cấu trúc giao diện) */}
+          <div
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
+              selectedSubjectId === null
+                ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20'
+                : 'text-gray-400 hover:bg-[#1a2332] hover:text-white'
+            }`}
+            onClick={() => onSelectSubject(null)}
+          >
+            <span>🌟 All Schedules</span>
+          </div>
+
+          <hr className="border-[#1a2332] my-2" />
+
+          {/*  Danh sách môn học động được truyền từ Database */}
+          <div className="space-y-1 max-h-[350px] overflow-y-auto pr-1">
+            {subjects?.map((subject) => (
               <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: subject.color }}
-              />
-              <span className="text-gray-300 text-sm group-hover:text-white transition-colors">
-                {subject.name}
-              </span>
-            </div>
-          ))}
+                key={subject.id}
+                // Nếu môn học này được click chọn thì sẽ đổi style làm nổi bật lên
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer group transition-all ${
+                  selectedSubjectId === subject.id
+                    ? 'bg-slate-800 text-white font-semibold border-l-4 border-blue-500 pl-2'
+                    : 'text-gray-400 hover:bg-[#1a2332] hover:text-white'
+                }`}
+                onClick={() => onSelectSubject(subject.id)}
+              >
+                <div
+                  className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform group-hover:scale-125"
+                  style={{ backgroundColor: subject.color }}
+                />
+                <span className="text-sm truncate">
+                  {subject.name}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-
-
-      <AddSubjectModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSubjectAdded={onAddSubject}
-      />
-
     </div>
   );
 }
