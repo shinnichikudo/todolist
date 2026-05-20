@@ -1,4 +1,6 @@
 import { Calendar, BookOpen, Plus } from 'lucide-react';
+import { useState } from 'react';
+import AddSubjectModal from './AddSubjectModal';
 
 interface Subject {
   id: string;
@@ -8,10 +10,12 @@ interface Subject {
 
 interface LeftSidebarProps {
   subjects: Subject[];
-  onAddSubject: () => void;
+  onAddSubject: (newSubject?: any) => void;
 }
 
 export default function LeftSidebar({ subjects, onAddSubject }: LeftSidebarProps) {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
   return (
     <div className="w-64 bg-[#0a0e1a] border-r border-[#1a2332] h-full flex flex-col">
       {/* Logo and Title */}
@@ -46,14 +50,15 @@ export default function LeftSidebar({ subjects, onAddSubject }: LeftSidebarProps
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-gray-400 text-sm uppercase tracking-wider">Subjects</h3>
           <button
-            onClick={onAddSubject}
+            onClick={() => setIsAddModalOpen(true)}
             className="w-6 h-6 rounded flex items-center justify-center hover:bg-[#1a2332] text-gray-400 hover:text-white transition-colors"
           >
             <Plus className="w-4 h-4" />
           </button>
         </div>
         <div className="space-y-2">
-          {subjects.map((subject) => (
+
+          {subjects?.map((subject) => (
             <div
               key={subject.id}
               className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1a2332] cursor-pointer group transition-colors"
@@ -69,6 +74,14 @@ export default function LeftSidebar({ subjects, onAddSubject }: LeftSidebarProps
           ))}
         </div>
       </div>
+
+
+      <AddSubjectModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubjectAdded={onAddSubject}
+      />
+
     </div>
   );
 }

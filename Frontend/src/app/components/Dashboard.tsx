@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LeftSidebar from './LeftSidebar';
 import CalendarView from './CalendarView';
 import RightSidebar from './RightSidebar';
 import FloatingAddButton from './FloatingAddButton';
+import AddSubjectModal from './AddSubjectModal';
+import SubjectAPI from '../../api/SubjectAPI';
 
 interface Subject {
   id: string;
@@ -21,69 +23,58 @@ interface CalendarEvent {
 }
 
 export default function Dashboard() {
-  const [subjects] = useState<Subject[]>([
-    { id: '1', name: 'Software Testing', color: '#3b82f6' },
-    { id: '2', name: 'Java Spring Boot', color: '#10b981' },
-    { id: '3', name: 'Database Systems', color: '#f59e0b' },
-    { id: '4', name: 'Web Development', color: '#8b5cf6' },
-    { id: '5', name: 'Computer Networks', color: '#ec4899' },
-  ]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [events] = useState<CalendarEvent[]>([
-    {
-      id: '1',
-      title: 'Unit Testing Lab',
-      subject: 'Software Testing',
-      date: new Date(2026, 4, 5),
-      time: '10:00 AM',
-      location: 'Lab 301',
-      color: '#3b82f6',
-    },
-    {
-      id: '2',
-      title: 'Spring Boot Midterm',
-      subject: 'Java Spring Boot',
-      date: new Date(2026, 4, 8),
-      time: '2:00 PM',
-      location: 'Room 205',
-      color: '#10b981',
-    },
-    {
-      id: '3',
-      title: 'Integration Testing Workshop',
-      subject: 'Software Testing',
-      date: new Date(2026, 4, 12),
-      time: '9:00 AM',
-      location: 'Lab 302',
-      color: '#3b82f6',
-    },
-    {
-      id: '4',
-      title: 'Database Project Due',
-      subject: 'Database Systems',
-      date: new Date(2026, 4, 15),
-      time: '11:59 PM',
-      color: '#f59e0b',
-    },
-    {
-      id: '5',
-      title: 'REST API Assignment',
-      subject: 'Java Spring Boot',
-      date: new Date(2026, 4, 18),
-      time: '5:00 PM',
-      location: 'Online',
-      color: '#10b981',
-    },
-    {
-      id: '6',
-      title: 'Web Dev Presentation',
-      subject: 'Web Development',
-      date: new Date(2026, 4, 20),
-      time: '3:00 PM',
-      location: 'Auditorium',
-      color: '#8b5cf6',
-    },
-  ]);
+
+ useEffect(() => {
+   const fetchDashboardData = async () => {
+     try {
+
+       const subjectRes = await SubjectAPI.getSubjects();
+       console.log("Dữ liệu thô từ Backend:", subjectRes);
+
+
+       setSubjects(subjectRes.map((subject: any) => ({
+         id: subject.id.toString(),
+         name: subject.name,
+         color: '#' + Math.floor(Math.random() * 16777215).toString(16)
+       })));
+
+
+       const allEvents: CalendarEvent[] = [];
+
+       subjectRes.forEach((subject: any) => {
+
+         if (subject.events && Array.isArray(subject.events)) {
+           subject.events.forEach((ev: any) => {
+             allEvents.push({
+               id: ev.id ? ev.id.toString() : Math.random().toString(),
+               title: ev.title || "",
+               subject: subject.name, //
+
+
+               date: ev.date ? new Date(ev.date) : new Date(2026, 4, 15),
+
+               time: ev.time || "",
+               location: ev.location || "",
+               color: ev.color || '#' + Math.floor(Math.random() * 16777215).toString(16)
+             });
+           });
+         }
+       });
+
+
+       setEvents(allEvents);
+
+     } catch (error) {
+       console.error("Lỗi khi tải dữ liệu từ Database:", error);
+     }
+   };
+
+   fetchDashboardData();
+ }, []);
 
   const upcomingEvents = events
     .filter(event => event.date >= new Date())
@@ -94,8 +85,14 @@ export default function Dashboard() {
     console.log('Add new event clicked');
   };
 
-  const handleAddSubject = () => {
-    console.log('Add new subject clicked');
+
+  const handleAddSubjectClick = () => {
+    setIsModalOpen(true);
+  };
+
+
+  const handleSubjectAdded = (newSubject: Subject) => {
+    setSubjects((prevSubjects) => [...prevSubjects, newSubject]);
   };
 
   const handleDateClick = (date: Date) => {
@@ -104,13 +101,24 @@ export default function Dashboard() {
 
   return (
     <div className="size-full flex bg-[#0f1423] dark">
-      <LeftSidebar subjects={subjects} onAddSubject={handleAddSubject} />
+      {/* Truyền hàm mở modal vào thanh Sidebar bên trái */}
+      <LeftSidebar subjects={subjects} onAddSubject={handleAddSubjectClick} />
+
       <CalendarView events={events} onDateClick={handleDateClick} />
+
       <RightSidebar
         upcomingEvents={upcomingEvents}
         user={{ name: 'Alex', msv: '20261...' }}
       />
+
       <FloatingAddButton onClick={handleAddEvent} />
+
+      {/* 🟢 Tích hợp Modal bật tắt để thực thi lưu DB */}
+      <AddSubjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubjectAdded={handleSubjectAdded}
+      />
     </div>
   );
 }

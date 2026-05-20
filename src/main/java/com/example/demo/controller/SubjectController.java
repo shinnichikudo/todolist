@@ -7,13 +7,13 @@ import com.example.demo.repository.SubjectRepository;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/api/subjects")
+@RequestMapping("/subjects")
 public class SubjectController {
 @Autowired
     SubjectRepository subjectRepository;
@@ -37,4 +37,17 @@ public class SubjectController {
 
         }
 }
+    @GetMapping("/list")
+    public ResponseEntity<?> getAllSubjects() {
+        try {
+
+            List<Subject> subjects = subjectRepository.findAll();
+
+
+            return ResponseEntity.ok(subjects);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
+
