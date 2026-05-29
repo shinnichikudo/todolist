@@ -5,6 +5,7 @@ import RightSidebar from './RightSidebar';
 import FloatingAddButton from './FloatingAddButton';
 import AddSubjectModal from './AddSubjectModal';
 import SubjectAPI from '../../api/SubjectAPI';
+import EvenTable from './EventTable';
 
 interface Subject {
   id: string;
@@ -28,6 +29,8 @@ export default function Dashboard() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'calendar' | 'events'>('calendar');
+
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -114,10 +117,22 @@ export default function Dashboard() {
         onAddSubject={handleAddSubjectClick}
         selectedSubjectId={selectedSubjectId}
         onSelectSubject={setSelectedSubjectId}
-      />
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
 
-      {/* Đưa mảng đã qua lọc (filteredEvents) vào bảng lịch vẽ */}
-      <CalendarView events={filteredEvents} onDateClick={handleDateClick} />
+      />
+      <div className="flex-1 overflow-auto relative">
+      {
+          activeTab === 'calendar' ?(
+          <CalendarView events={filteredEvents} onDateClick={handleDateClick} />
+          ) :
+      (
+          <EvenTable events={filteredEvents} />)
+
+          }
+      </div>
+
+
 
       <RightSidebar
         upcomingEvents={upcomingEvents}
