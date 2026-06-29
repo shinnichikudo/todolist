@@ -24,6 +24,9 @@ public class Event {
     @Column(nullable = false)
     private LocalDateTime eventDate;
 
+    @Column
+    private String location;
+
     // Kết nối với bảng Subject (Môn học)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @ManyToOne(fetch = FetchType.LAZY)

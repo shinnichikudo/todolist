@@ -7,6 +7,8 @@ import AddSubjectModal from './AddSubjectModal';
 import SubjectAPI from '../../api/SubjectAPI';
 import EvenTable from './EventTable';
 import authApi from '../../api/authApi';
+import AddEventModal from './AddEventModal';
+
 interface Subject {
   id: string;
   name: string;
@@ -26,6 +28,7 @@ interface CalendarEvent {
 
 
 export default function Dashboard() {
+    const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -118,7 +121,7 @@ export default function Dashboard() {
     {
         const eventday = new Date(event.date);
         eventday.setHours(0, 0, 0, 0);
-        return eventday >= todaystart;``
+        return eventday >= todaystart;''
         })
     .sort((a, b) => a.date.getTime() - b.date.getTime())
     .slice(0, 5); // Lấy 5 sự kiện sắp tới nhất
@@ -126,7 +129,10 @@ export default function Dashboard() {
 
 
   const handleAddEvent = () => {
-    console.log('Add new event clicked');
+    setIsEventModalOpen(true);
+  };
+const handleEventAdded = (newEvent: CalendarEvent) => {
+    setEvents((prevEvents) => [...prevEvents, newEvent]);
   };
 
   const handleAddSubjectClick = () => {
@@ -179,6 +185,14 @@ export default function Dashboard() {
         onClose={() => setIsModalOpen(false)}
         onSubjectAdded={handleSubjectAdded}
       />
+          <AddEventModal
+            isOpen={isEventModalOpen}
+            onClose={() => setIsEventModalOpen(false)}
+            onEventAdded={handleEventAdded}
+            subjects={subjects}
+            userMsv={user.msv}
+          />
     </div>
+
   );
 }
