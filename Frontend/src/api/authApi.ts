@@ -31,6 +31,11 @@ export const authAPI = {
                 password: data.password
 
             });
-    }
+    },
+        getProfile: () : Promise<UserProfileResponse> => {
+            const url = '/auth/me';
+            return axiosClient.get(url);
+            }
+
         };
     export default authAPI;

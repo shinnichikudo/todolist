@@ -6,7 +6,7 @@ import FloatingAddButton from './FloatingAddButton';
 import AddSubjectModal from './AddSubjectModal';
 import SubjectAPI from '../../api/SubjectAPI';
 import EvenTable from './EventTable';
-
+import authApi from '../../api/authApi';
 interface Subject {
   id: string;
   name: string;
@@ -24,15 +24,38 @@ interface CalendarEvent {
   color: string;
 }
 
+
 export default function Dashboard() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'calendar' | 'events'>('calendar');
+  const [user,setUser ] = useState<UserProfile>({
+      email : " loading ",
+      msv : " loading "
+      })
+
 
 
   useEffect(() => {
+      const fetchUserProfile = async () => {
+            try {
+              const token = localStorage.getItem('token');
+              if (!token) return;
+
+              const userRes = await authApi.getProfile();
+
+
+              setUser({
+
+                msv: userRes.msv.toString(),
+                email: userRes.email
+              });
+            } catch (error) {
+              console.error("Lỗi khi lấy profile:", error);
+            }
+          };
     const fetchDashboardData = async () => {
       try {
         const subjectRes = await SubjectAPI.getSubjects();
@@ -66,7 +89,7 @@ export default function Dashboard() {
                 time: ev.event_date
                   ? new Date(ev.event_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
                   : "00:00 AM",
-                location: "Xem chi tiết",
+
                 color: '#' + Math.floor(Math.random() * 16777215).toString(16)
               });
             });
@@ -77,8 +100,9 @@ export default function Dashboard() {
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu từ Database:", error);
       }
-    };
 
+    };
+    fetchUserProfile();
     fetchDashboardData();
   }, []);
 
@@ -87,11 +111,19 @@ export default function Dashboard() {
     ? events.filter(event => event.subject_id === selectedSubjectId)
     : events;
 
-  // Cập nhật lại upcomingEvents dựa trên danh sách đã lọc (hoặc giữ nguyên mảng gốc tuỳ bạn)
-  const upcomingEvents = filteredEvents
-    .filter(event => event.date >= new Date())
+  // Cập nhật lại upcomingEvents dựa trên danh sách đã lọc
+    const todaystart = new Date();
+    todaystart.setHours(0, 0, 0, 0); // Đặt thời gian về đầu ngày
+    const upcomingEvents = filteredEvents.filter(event =>
+    {
+        const eventday = new Date(event.date);
+        eventday.setHours(0, 0, 0, 0);
+        return eventday >= todaystart;``
+        })
     .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .slice(0, 5);
+    .slice(0, 5); // Lấy 5 sự kiện sắp tới nhất
+
+
 
   const handleAddEvent = () => {
     console.log('Add new event clicked');
@@ -111,7 +143,7 @@ export default function Dashboard() {
 
   return (
     <div className="size-full flex bg-[#0f1423] dark">
-      {/* 🟢 TRUYỀN THÊM TRẠNG THÁI FILTER VÀO SIDEBAR TRÁI */}
+
       <LeftSidebar
         subjects={subjects}
         onAddSubject={handleAddSubjectClick}
@@ -134,9 +166,10 @@ export default function Dashboard() {
 
 
 
+
       <RightSidebar
         upcomingEvents={upcomingEvents}
-        user={{ name: 'Alex', msv: '20261...' }}
+        user={user }
       />
 
       <FloatingAddButton onClick={handleAddEvent} />

@@ -10,8 +10,8 @@ interface Event {
   color: string;
 }
 
-interface UserProfile {
-  name: string;
+export interface UserProfile {
+  email: string;
   msv: string;
   avatar?: string;
 }
@@ -42,8 +42,8 @@ export default function RightSidebar({ upcomingEvents, user }: RightSidebarProps
             <User className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-white">{user.name}</h3>
-            <p className="text-gray-500 text-sm">MSV: {user.msv}</p>
+            <h3 className="text-white">{user?.email}</h3>
+            <p className="text-gray-500 text-sm">MSV: {user?.msv}</p>
           </div>
         </div>
       </div>

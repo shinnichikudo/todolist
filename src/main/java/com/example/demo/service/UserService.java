@@ -15,6 +15,8 @@ public class UserService {
     // lay cai mat khau duoc tiem
     @Autowired
     private PasswordEncoder passwordEncoder ;
+
+
     public User RegisterUser(User user) {
         if(user.getEmail() == null || user.getPassword() == null) {
             throw new RuntimeException("Email va mat khau khong duoc de trong");
@@ -40,10 +42,8 @@ public class UserService {
               }
                 return user;
         }
-
-
-
-
-
+    public User findUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
 
 }
