@@ -1,4 +1,5 @@
-import { Clock, MapPin, User } from 'lucide-react';
+import { Clock, MapPin, User ,LogOut } from 'lucide-react';
+
 
 interface Event {
   id: string;
@@ -20,6 +21,11 @@ interface RightSidebarProps {
   upcomingEvents: Event[];
   user: UserProfile;
 }
+const handleLogout = () => {
+    localStorage.removeItem('token');
+
+    window.location.href = '/';
+  };
 
 export default function RightSidebar({ upcomingEvents, user }: RightSidebarProps) {
   const formatDate = (date: Date) => {
@@ -44,7 +50,15 @@ export default function RightSidebar({ upcomingEvents, user }: RightSidebarProps
           <div>
             <h3 className="text-white">{user?.email}</h3>
             <p className="text-gray-500 text-sm">MSV: {user?.msv}</p>
+
           </div>
+          <button
+                      onClick={handleLogout}
+                      title="Đăng xuất"
+                      className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                    >
+                      <LogOut className="w-5 h-5" />
+                    </button>
         </div>
       </div>
 
