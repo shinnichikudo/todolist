@@ -28,7 +28,8 @@ export const authAPI = {
                 msv: Number(data.msv),
 
                 email: data.email,
-                password: data.password
+                password: data.password,
+                username: data.username
 
             });
     },

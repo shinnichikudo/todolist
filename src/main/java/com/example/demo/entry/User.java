@@ -28,6 +28,8 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private String password;
+    @Column(nullable = false)
+    private boolean isVerified = false;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Subject> subjects;
@@ -39,6 +41,10 @@ public class User implements UserDetails {
     @Override
     public String getUsername() {
         return email;
+    }
+
+    public void setUsername(String email) {
+        this.email = email;
     }
     @Override
     public boolean isAccountNonExpired() {

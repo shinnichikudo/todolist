@@ -4,10 +4,11 @@ import CalendarView from './CalendarView';
 import RightSidebar from './RightSidebar';
 import FloatingAddButton from './FloatingAddButton';
 import AddSubjectModal from './AddSubjectModal';
-import SubjectAPI from '../../api/SubjectAPI';
-import EvenTable from './EventTable';
-import authApi from '../../api/authApi';
 import AddEventModal from './AddEventModal';
+import EventTable from './EventTable';
+
+import SubjectAPI from '../../api/SubjectAPI';
+import authApi from '../../api/authApi';
 
 interface Subject {
   id: string;
@@ -26,130 +27,139 @@ interface CalendarEvent {
   color: string;
 }
 
+interface UserProfile {
+  email: string;
+  msv: string;
+}
 
 export default function Dashboard() {
-    const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'calendar' | 'events'>('calendar');
-  const [user,setUser ] = useState<UserProfile>({
-      email : " loading ",
-      msv : " loading "
-      })
 
+  const [activeTab, setActiveTab] =
+    useState<'calendar' | 'events'>('calendar');
 
+  const [user, setUser] = useState<UserProfile>({
+    email: 'loading...',
+    msv: 'loading...',
+  });
 
   useEffect(() => {
-      const fetchUserProfile = async () => {
-            try {
-              const token = localStorage.getItem('token');
-              if (!token) return;
+    const fetchUserProfile = async () => {
+      try {
+        const userRes = await authApi.getProfile();
 
-              const userRes = await authApi.getProfile();
+        setUser({
+          msv: userRes.msv.toString(),
+          email: userRes.email,
+        });
+      } catch (error) {
+        console.error('Lỗi lấy profile:', error);
+      }
+    };
 
-
-              setUser({
-
-                msv: userRes.msv.toString(),
-                email: userRes.email
-              });
-            } catch (error) {
-              console.error("Lỗi khi lấy profile:", error);
-            }
-          };
     const fetchDashboardData = async () => {
       try {
         const subjectRes = await SubjectAPI.getSubjects();
-        console.log("Dữ liệu thô từ Backend:", subjectRes);
 
-        // 1. Map danh sách môn học
-        const mappedSubjects = subjectRes.map((subject: any) => ({
+        console.log('Subject từ backend:', subjectRes);
+
+        // Map Subject
+        const mappedSubjects: Subject[] = subjectRes.map((subject: any) => ({
           id: subject.id.toString(),
           name: subject.name,
-          color: '#' + Math.floor(Math.random() * 16777215).toString(16)
+          color: '#' + Math.floor(Math.random() * 16777215).toString(16),
         }));
+
         setSubjects(mappedSubjects);
 
-        //  Gom tất cả các event từ các môn học lại
+        // Map Event
         const allEvents: CalendarEvent[] = [];
-        subjectRes.forEach((subject: any) => {
-          if (subject.events && Array.isArray(subject.events)) {
-            subject.events.forEach((ev: any) => {
 
-              const rawDate = ev.event_date ? new Date(ev.event_date) : new Date();
+        subjectRes.forEach((subject: any) => {
+          const subjectColor =
+            mappedSubjects.find(
+              (s) => s.id === subject.id.toString()
+            )?.color || '#3b82f6';
+
+          if (subject.events) {
+            subject.events.forEach((ev: any) => {
+              const eventDate = new Date(ev.eventDate);
 
               allEvents.push({
-                id: ev.id ? ev.id.toString() : Math.random().toString(),
-                title: ev.title || "Không có tiêu đề",
-                subject: ev.subject || subject.name,
-                subject_id: subject.id.toString(), // 🟢 Lưu lại ID môn học cha để xử lý lọc
-
-                date: rawDate,
-
-                // Tách giờ từ chuỗi datetime-local tự động nếu không có cột time độc lập
-                time: ev.event_date
-                  ? new Date(ev.event_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-                  : "00:00 AM",
-
-                color: '#' + Math.floor(Math.random() * 16777215).toString(16)
+                id: ev.id.toString(),
+                title: ev.title,
+                subject: subject.name,
+                subject_id: subject.id.toString(),
+                date: eventDate,
+                time: eventDate.toLocaleTimeString('vi-VN', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }),
+                location: ev.location,
+                color: subjectColor,
               });
             });
           }
         });
 
+        console.log('Events:', allEvents);
+
         setEvents(allEvents);
       } catch (error) {
-        console.error("Lỗi khi tải dữ liệu từ Database:", error);
+        console.error('Lỗi tải Dashboard:', error);
       }
-
     };
+
     fetchUserProfile();
     fetchDashboardData();
   }, []);
 
-  // loc event
+  // Lọc theo môn học
   const filteredEvents = selectedSubjectId
-    ? events.filter(event => event.subject_id === selectedSubjectId)
+    ? events.filter((event) => event.subject_id === selectedSubjectId)
     : events;
 
-  // Cập nhật lại upcomingEvents dựa trên danh sách đã lọc
-    const todaystart = new Date();
-    todaystart.setHours(0, 0, 0, 0); // Đặt thời gian về đầu ngày
-    const upcomingEvents = filteredEvents.filter(event =>
-    {
-        const eventday = new Date(event.date);
-        eventday.setHours(0, 0, 0, 0);
-        return eventday >= todaystart;''
-        })
+  // Upcoming Events
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const upcomingEvents = filteredEvents
+    .filter((event) => {
+      const eventDay = new Date(event.date);
+      eventDay.setHours(0, 0, 0, 0);
+      return eventDay >= todayStart;
+    })
     .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .slice(0, 5); // Lấy 5 sự kiện sắp tới nhất
-
-
-
-  const handleAddEvent = () => {
-    setIsEventModalOpen(true);
-  };
-const handleEventAdded = (newEvent: CalendarEvent) => {
-    setEvents((prevEvents) => [...prevEvents, newEvent]);
-  };
+    .slice(0, 5);
 
   const handleAddSubjectClick = () => {
     setIsModalOpen(true);
   };
 
   const handleSubjectAdded = (newSubject: Subject) => {
-    setSubjects((prevSubjects) => [...prevSubjects, newSubject]);
+    setSubjects((prev) => [...prev, newSubject]);
+  };
+
+  const handleAddEvent = () => {
+    setIsEventModalOpen(true);
+  };
+
+  const handleEventAdded = (newEvent: CalendarEvent) => {
+    setEvents((prev) => [...prev, newEvent]);
   };
 
   const handleDateClick = (date: Date) => {
-    console.log('Date clicked:', date);
+    console.log(date);
   };
 
   return (
     <div className="size-full flex bg-[#0f1423] dark">
-
       <LeftSidebar
         subjects={subjects}
         onAddSubject={handleAddSubjectClick}
@@ -157,25 +167,22 @@ const handleEventAdded = (newEvent: CalendarEvent) => {
         onSelectSubject={setSelectedSubjectId}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-
       />
+
       <div className="flex-1 overflow-auto relative">
-      {
-          activeTab === 'calendar' ?(
-          <CalendarView events={filteredEvents} onDateClick={handleDateClick} />
-          ) :
-      (
-          <EvenTable events={filteredEvents} />)
-
-          }
+        {activeTab === 'calendar' ? (
+          <CalendarView
+            events={filteredEvents}
+            onDateClick={handleDateClick}
+          />
+        ) : (
+          <EventTable events={filteredEvents} />
+        )}
       </div>
-
-
-
 
       <RightSidebar
         upcomingEvents={upcomingEvents}
-        user={user }
+        user={user}
       />
 
       <FloatingAddButton onClick={handleAddEvent} />
@@ -185,14 +192,14 @@ const handleEventAdded = (newEvent: CalendarEvent) => {
         onClose={() => setIsModalOpen(false)}
         onSubjectAdded={handleSubjectAdded}
       />
-          <AddEventModal
-            isOpen={isEventModalOpen}
-            onClose={() => setIsEventModalOpen(false)}
-            onEventAdded={handleEventAdded}
-            subjects={subjects}
-            userMsv={user.msv}
-          />
-    </div>
 
+      <AddEventModal
+        isOpen={isEventModalOpen}
+        onClose={() => setIsEventModalOpen(false)}
+        onEventAdded={handleEventAdded}
+        subjects={subjects}
+        userMsv={user.msv}
+      />
+    </div>
   );
 }

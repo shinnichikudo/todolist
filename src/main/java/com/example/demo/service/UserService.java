@@ -40,7 +40,11 @@ public class UserService {
               if (!passwordEncoder.matches(password, user.getPassword())) {
                 throw new RuntimeException("Mat khau khong dung");
               }
+            if (!user.isVerified()) {
+                throw new RuntimeException("Vui lòng xác thực email trước khi đăng nhập!");
+            }
                 return user;
+
         }
     public User findUserByEmail(String email) {
         return userRepository.findByEmail(email);

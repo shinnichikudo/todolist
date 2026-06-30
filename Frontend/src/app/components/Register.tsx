@@ -2,35 +2,52 @@ import { Calendar, Mail, Lock, User } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authAPI from '../../api/authApi';
-
+import OtpModal from './OtpModal'; // QUAN TRỌNG: Import Modal vào đây
 
 export default function Register() {
-const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
   const [msv, setMsv] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const [registeredMsv, setRegisteredMsv] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // 1. Chặn reload trang phải đặt đầu tiên
     setErrorMsg('');
-if (password !== confirmPassword) {
+
+    // 2. Kiểm tra mật khẩu
+    if (password !== confirmPassword) {
       setErrorMsg('Mật khẩu nhập lại không khớp!');
       return;
     }
+
     try {
-        await authAPI.register({ msv, email, password, confirmPassword });
-    if (password !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
+        setIsLoading(true);
+      // 3. Đóng gói dữ liệu
+      const payload = {
+        msv: msv,
+        email: email,
+        password: password,
+
+      };
+
+      // 4. Gọi API
+      await authAPI.register(payload);
+
+      // 5. NẾU THÀNH CÔNG: Lưu MSV và mở Popup OTP
+      setRegisteredMsv(msv);
+      setIsOtpModalOpen(true);
+
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      setErrorMsg('Đăng ký thất bại: ' + (error.response?.data || error.message));
     }
-    navigate('/');
-    }
-catch (error : any) {
-    console.error('Registration error:', error);
-    setErrorMsg('register failed: ' + (error.response?.data?.message || error.message));
-}
+    finally {
+        setIsLoading(false);}
   };
 
   return (
@@ -48,7 +65,7 @@ catch (error : any) {
         {/* Register Form */}
         <div className="bg-[#0a0e1a] border border-[#1a2332] rounded-xl p-8">
           <h2 className="text-white text-xl mb-6">Create your account</h2>
-          {/*Neu errorMsg co chu thi man hinh do*/}
+
           {errorMsg && (
             <div className="mb-4 p-3 bg-red-900/50 border border-red-500/50 rounded-lg text-red-200 text-sm text-center">
               {errorMsg}
@@ -139,8 +156,10 @@ catch (error : any) {
             {/* Register Button */}
             <button
               type="submit"
+              disabled={isLoading}
               className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 rounded-lg transition-all shadow-lg shadow-blue-900/30 hover:shadow-xl hover:shadow-blue-900/40"
-            >
+                >{isLoading ? 'Đang gửi mã xác nhận...' : 'Create account'}
+
               Create account
             </button>
           </form>
@@ -160,6 +179,17 @@ catch (error : any) {
         <p className="text-center text-gray-500 text-xs mt-8">
           © 2026 TestTool. Academic Calendar Management System.
         </p>
+
+        {/* Gắn Popup OTP vào đây */}
+        <OtpModal
+          isOpen={isOtpModalOpen}
+          onClose={() => setIsOtpModalOpen(false)}
+          msv={registeredMsv}
+          onSuccess={() => {
+            setIsOtpModalOpen(false);
+            navigate('/'); // Chuyển về trang đăng nhập
+          }}
+        />
       </div>
     </div>
   );

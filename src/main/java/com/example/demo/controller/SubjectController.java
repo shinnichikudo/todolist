@@ -40,9 +40,14 @@ public class SubjectController {
     @GetMapping("/list")
     public ResponseEntity<?> getAllSubjects() {
         try {
+            //  Lấy email của người đang đăng nhập từ Token JWT
+            String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
 
-            List<Subject> subjects = subjectRepository.findAll();
+            //  Tìm thông tin User
+            User currentUser = userRepository.findByEmail(email);
 
+            //  Lọc danh sách Subject theo MSV (Giống hệt bên Event)
+            List<Subject> subjects = subjectRepository.findByUserMsv(currentUser.getMsv());
 
             return ResponseEntity.ok(subjects);
         } catch (Exception e) {

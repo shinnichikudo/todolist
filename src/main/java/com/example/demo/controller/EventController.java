@@ -34,7 +34,15 @@ public class EventController {
     @GetMapping("/list")
     public ResponseEntity<?> getAllEvents() {
         try {
-            List<Event> events = eventRepository.findAll();
+
+            String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+
+
+            User currentUser = userRepository.findByEmail(email);
+
+
+            List<Event> events = eventRepository.findByUserMsv(currentUser.getMsv());
+
             return ResponseEntity.ok(events);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -43,6 +51,7 @@ public class EventController {
     @PostMapping
     public ResponseEntity<?> createEvent(@RequestBody EventDTO requestDTO) {
         try {
+
             Event newEvent = new Event();
             newEvent.setTitle(requestDTO.getTitle());
             newEvent.setEventDate(LocalDateTime.parse(requestDTO.getEvent_date()));
